@@ -507,12 +507,12 @@ export default function App() {
         listings: EnrichedListing[];
       }>(`/api/marketplace/overview?${params.toString()}`);
       setCategories(
-        data.categories && data.categories.length > 0 ? data.categories : CANONICAL_CATEGORIES
+        data?.categories && data.categories.length > 0 ? data.categories : CANONICAL_CATEGORIES
       );
-      setAreas(data.areas);
-      setStores(data.stores);
-      setHighestRatedStore(data.highestRatedStore);
-      setMostSellingListing(data.mostSellingListing);
+      setAreas(data?.areas ?? []);
+      setStores(data.stores ?? []);
+      setHighestRatedStore(data.highestRatedStore ?? null);
+      setMostSellingListing(data.mostSellingListing ?? null);
       setBestSellingListings(data.bestSellingListings || []);
     } catch (err) {
       notify(err instanceof Error ? err.message : 'Failed to load marketplace.', 'error');
