@@ -1,0 +1,375 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 1. Global Safety Net (Default Deny)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // 2. Global Helpers
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    function isAdminEmail() {
+      return isVerifiedUser() && (
+        request.auth.token.email == 'mohamedamine2018ma@gmail.com' ||
+        request.auth.token.email == 'sadi.marwan.omar@gmail.com'
+      );
+    }
+
+    function isAdmin() {
+      return isVerifiedUser() && (
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
+        request.auth.token.email == 'mohamedamine2018ma@gmail.com' ||
+        request.auth.token.email == 'sadi.marwan.omar@gmail.com'
+      );
+    }
+
+    // 3. Entity Validation Blueprints (Synchronized with firebase-blueprint.json)
+    function isValidUserProfile(data, userId) {
+      return data.keys().hasAll(['uid', 'displayName', 'role', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['uid', 'displayName', 'role', 'sellerType', 'createdAt', 'updatedAt'])
+        && data.uid is string && data.uid == userId && isValidId(data.uid)
+        && data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 80
+        && data.role is string && data.role in ['customer', 'merchant', 'driver']
+        && (!('sellerType' in data) || (data.sellerType is string && data.sellerType in ['physical_store', 'online_page']))
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidUserPrivateInfo(data, userId) {
+      return data.keys().hasAll(['uid', 'email', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['uid', 'email', 'phone', 'createdAt', 'updatedAt'])
+        && data.uid is string && data.uid == userId && isValidId(data.uid)
+        && data.email is string && data.email.size() >= 3 && data.email.size() <= 120
+        && (!('phone' in data) || (data.phone is string && data.phone.size() <= 24))
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidStore(data, storeId) {
+      return data.keys().hasAll([
+          'id', 'ownerUid', 'name', 'slug', 'description', 'area', 'city',
+          'openingHours', 'isOpen', 'isApproved', 'rating', 'reviewCount',
+          'deliveryFee', 'deliveryRadiusKm', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'ownerUid', 'storeType', 'name', 'slug', 'description', 'area', 'city',
+          'openingHours', 'isOpen', 'isApproved', 'rating', 'reviewCount',
+          'deliveryFee', 'deliveryRadiusKm', 'logoUrl', 'whatsapp',
+          'facebookUrl', 'instagramUrl', 'googleMapsUrl', 'createdAt', 'updatedAt'
+        ])
+        && data.id is string && data.id == storeId && data.id.size() >= 2 && data.id.size() <= 64 && data.id.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.ownerUid is string && data.ownerUid.size() >= 1 && data.ownerUid.size() <= 128 && data.ownerUid.matches('^[a-zA-Z0-9_\\-]+$')
+        && (!('storeType' in data) || (data.storeType is string && data.storeType in ['physical_store', 'online_page']))
+        && data.name is string && data.name.size() >= 2 && data.name.size() <= 80
+        && data.slug is string && data.slug.size() >= 2 && data.slug.size() <= 100 && data.slug.matches('^[a-z0-9\\-]+$')
+        && data.description is string && data.description.size() >= 4 && data.description.size() <= 400
+        && data.area is string && data.area.size() >= 2 && data.area.size() <= 60
+        && data.city is string && data.city.size() >= 2 && data.city.size() <= 60
+        && data.openingHours is string && data.openingHours.size() >= 3 && data.openingHours.size() <= 60
+        && data.isOpen is bool
+        && data.isApproved is bool
+        && data.rating is number && data.rating >= 0 && data.rating <= 5
+        && data.reviewCount is int && data.reviewCount >= 0 && data.reviewCount <= 1000000
+        && data.deliveryFee is int && data.deliveryFee >= 0 && data.deliveryFee <= 50000
+        && data.deliveryRadiusKm is number && data.deliveryRadiusKm >= 1 && data.deliveryRadiusKm <= 100
+        && (!('logoUrl' in data) || (data.logoUrl is string && data.logoUrl.size() <= 500))
+        && (!('whatsapp' in data) || (data.whatsapp is string && data.whatsapp.size() <= 32))
+        && (!('facebookUrl' in data) || (data.facebookUrl is string && data.facebookUrl.size() <= 300))
+        && (!('instagramUrl' in data) || (data.instagramUrl is string && data.instagramUrl.size() <= 300))
+        && (!('googleMapsUrl' in data) || (data.googleMapsUrl is string && data.googleMapsUrl.size() <= 500))
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidSellerProduct(data, productId) {
+      return data.keys().hasAll([
+          'id', 'sellerUid', 'sellerName', 'storeId', 'storeName', 'name', 'slug',
+          'brand', 'description', 'categoryId', 'categoryName', 'imageKey', 'imageUrl',
+          'price', 'currency', 'stockQuantity', 'availabilityStatus',
+          'soldCount', 'revenueTotal', 'isActive', 'isBestSeller', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'sellerUid', 'sellerName', 'storeId', 'storeName', 'name', 'slug',
+          'brand', 'description', 'categoryId', 'categoryName', 'imageKey', 'imageUrl',
+          'price', 'currency', 'stockQuantity', 'availabilityStatus',
+          'soldCount', 'revenueTotal', 'isActive', 'isBestSeller', 'createdAt', 'updatedAt'
+        ])
+        && data.id is string && data.id == productId && data.id.size() >= 2 && data.id.size() <= 64 && data.id.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.sellerUid is string && data.sellerUid.size() >= 1 && data.sellerUid.size() <= 128 && data.sellerUid.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.sellerName is string && data.sellerName.size() >= 1 && data.sellerName.size() <= 80
+        && data.storeId is string && data.storeId.size() >= 2 && data.storeId.size() <= 64 && data.storeId.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.storeName is string && data.storeName.size() >= 2 && data.storeName.size() <= 80
+        && data.name is string && data.name.size() >= 2 && data.name.size() <= 100
+        && data.slug is string && data.slug.size() >= 2 && data.slug.size() <= 120 && data.slug.matches('^[a-z0-9\\-]+$')
+        && data.brand is string && data.brand.size() >= 1 && data.brand.size() <= 60
+        && data.description is string && data.description.size() >= 4 && data.description.size() <= 400
+        && data.categoryId is string && data.categoryId.size() >= 2 && data.categoryId.size() <= 40 && data.categoryId.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.categoryName is string && data.categoryName.size() >= 2 && data.categoryName.size() <= 60
+        && data.imageKey is string && data.imageKey.size() >= 1 && data.imageKey.size() <= 40
+        && data.imageUrl is string && data.imageUrl.size() <= 500
+        && data.price is int && data.price >= 1 && data.price <= 5000000
+        && data.currency is string && data.currency == 'DZD'
+        && data.stockQuantity is int && data.stockQuantity >= 0 && data.stockQuantity <= 100000
+        && data.availabilityStatus is string && data.availabilityStatus in ['in_stock', 'out_of_stock', 'unconfirmed']
+        && data.soldCount is int && data.soldCount >= 0 && data.soldCount <= 1000000
+        && data.revenueTotal is number && data.revenueTotal >= 0
+        && data.isActive is bool
+        && data.isBestSeller is bool
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidBestSellingProduct(data, bestSellerId) {
+      return data.keys().hasAll([
+          'id', 'productId', 'sellerUid', 'storeId', 'storeName', 'productName',
+          'productSlug', 'brand', 'categoryName', 'imageKey', 'imageUrl',
+          'price', 'currency', 'soldCount', 'revenueTotal', 'stockQuantity',
+          'isPublic', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'productId', 'sellerUid', 'storeId', 'storeName', 'productName',
+          'productSlug', 'brand', 'categoryName', 'imageKey', 'imageUrl',
+          'price', 'currency', 'soldCount', 'revenueTotal', 'stockQuantity',
+          'isPublic', 'createdAt', 'updatedAt'
+        ])
+        && data.id is string && data.id == bestSellerId && data.id.size() >= 2 && data.id.size() <= 64 && data.id.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.productId is string && data.productId == bestSellerId && data.productId.size() >= 2 && data.productId.size() <= 64 && data.productId.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.sellerUid is string && data.sellerUid.size() >= 1 && data.sellerUid.size() <= 128 && data.sellerUid.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.storeId is string && data.storeId.size() >= 2 && data.storeId.size() <= 64 && data.storeId.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.storeName is string && data.storeName.size() >= 2 && data.storeName.size() <= 80
+        && data.productName is string && data.productName.size() >= 2 && data.productName.size() <= 100
+        && data.productSlug is string && data.productSlug.size() >= 2 && data.productSlug.size() <= 120 && data.productSlug.matches('^[a-z0-9\\-]+$')
+        && data.brand is string && data.brand.size() >= 1 && data.brand.size() <= 60
+        && data.categoryName is string && data.categoryName.size() >= 2 && data.categoryName.size() <= 60
+        && data.imageKey is string && data.imageKey.size() >= 1 && data.imageKey.size() <= 40
+        && data.imageUrl is string && data.imageUrl.size() <= 500
+        && data.price is int && data.price >= 1 && data.price <= 5000000
+        && data.currency is string && data.currency == 'DZD'
+        && data.soldCount is int && data.soldCount >= 0 && data.soldCount <= 1000000
+        && data.revenueTotal is number && data.revenueTotal >= 0
+        && data.stockQuantity is int && data.stockQuantity >= 0 && data.stockQuantity <= 100000
+        && data.isPublic is bool
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    // 4. Connection Health Probe
+    match /test/{docId} {
+      allow get: if docId == 'connection';
+      allow list, create, update, delete: if false;
+    }
+
+    // 5. Admins Collection (Read restricted; client writes forbidden)
+    match /admins/{userId} {
+      allow get: if isValidId(userId) && (isOwner(userId) || isAdmin());
+      allow list: if isAdminEmail();
+      allow create, update, delete: if false;
+    }
+
+    // 6. Users Collection & Isolated PII Subcollection
+    match /users/{userId} {
+      allow get: if isValidId(userId) && (isOwner(userId) || isAdmin());
+      allow list: if isAdminEmail();
+      allow create: if isValidId(userId)
+        && isVerifiedUser()
+        && isOwner(userId)
+        && isValidUserProfile(incoming(), userId)
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(userId)
+        && isVerifiedUser()
+        && (isOwner(userId) || isAdmin())
+        && isValidUserProfile(incoming(), userId)
+        && incoming().uid == existing().uid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          isAdmin() ||
+          incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'role', 'sellerType', 'updatedAt'])
+        );
+      allow delete: if false;
+
+      match /private/{docId} {
+        allow get: if isValidId(userId) && isValidId(docId) && (isOwner(userId) || isAdmin());
+        allow list: if isValidId(userId) && (isOwner(userId) || isAdminEmail());
+        allow create: if isValidId(userId) && docId == 'info'
+          && isVerifiedUser()
+          && isOwner(userId)
+          && isValidUserPrivateInfo(incoming(), userId)
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time;
+        allow update: if isValidId(userId) && docId == 'info'
+          && isVerifiedUser()
+          && (isOwner(userId) || isAdmin())
+          && isValidUserPrivateInfo(incoming(), userId)
+          && incoming().uid == existing().uid
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly(['email', 'phone', 'updatedAt']);
+        allow delete: if false;
+      }
+    }
+
+    // 7. Seller Stores Collection
+    match /stores/{storeId} {
+      allow get: if isValidId(storeId) && (
+        existing().isApproved == true ||
+        (isSignedIn() && existing().ownerUid == request.auth.uid) ||
+        isAdmin()
+      );
+      allow list: if resource.data.isApproved == true ||
+        (isSignedIn() && resource.data.ownerUid == request.auth.uid) ||
+        isAdminEmail();
+      allow create: if isValidId(storeId)
+        && isVerifiedUser()
+        && isValidStore(incoming(), storeId)
+        && incoming().ownerUid == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(storeId)
+        && isVerifiedUser()
+        && isValidStore(incoming(), storeId)
+        && incoming().id == existing().id
+        && incoming().ownerUid == existing().ownerUid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          isAdmin() ||
+          (
+            existing().ownerUid == request.auth.uid &&
+            incoming().diff(existing()).affectedKeys().hasOnly([
+              'storeType', 'name', 'slug', 'description', 'area', 'openingHours',
+              'isOpen', 'deliveryFee', 'deliveryRadiusKm',
+              'logoUrl', 'whatsapp', 'facebookUrl', 'instagramUrl', 'googleMapsUrl',
+              'updatedAt'
+            ])
+          )
+        );
+      allow delete: if isValidId(storeId) && isVerifiedUser() && (
+        existing().ownerUid == request.auth.uid || isAdmin()
+      );
+    }
+
+    // 8. Seller Products Collection (Master Gate -> stores/{storeId})
+    match /seller_products/{productId} {
+      allow get: if isValidId(productId) && (
+        existing().isActive == true ||
+        (isSignedIn() && existing().sellerUid == request.auth.uid) ||
+        isAdmin()
+      );
+      allow list: if resource.data.isActive == true ||
+        (isSignedIn() && resource.data.sellerUid == request.auth.uid) ||
+        isAdminEmail();
+      allow create: if isValidId(productId)
+        && isVerifiedUser()
+        && isValidSellerProduct(incoming(), productId)
+        && incoming().sellerUid == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
+        && getAfter(/databases/$(database)/documents/stores/$(incoming().storeId)).data.ownerUid == request.auth.uid;
+      allow update: if isValidId(productId)
+        && isVerifiedUser()
+        && isValidSellerProduct(incoming(), productId)
+        && incoming().id == existing().id
+        && incoming().sellerUid == existing().sellerUid
+        && incoming().storeId == existing().storeId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          isAdmin() ||
+          (
+            existing().sellerUid == request.auth.uid &&
+            get(/databases/$(database)/documents/stores/$(existing().storeId)).data.ownerUid == request.auth.uid &&
+            (
+              // Action 1: Update product details, price, stock, or visibility
+              incoming().diff(existing()).affectedKeys().hasOnly([
+                'name', 'slug', 'brand', 'description', 'categoryId', 'categoryName',
+                'imageKey', 'imageUrl', 'price', 'stockQuantity', 'availabilityStatus',
+                'isActive', 'updatedAt'
+              ]) ||
+              // Action 2: Record sale & atomically sync BestSellingProduct document
+              (
+                incoming().diff(existing()).affectedKeys().hasOnly([
+                  'soldCount', 'revenueTotal', 'stockQuantity', 'availabilityStatus',
+                  'isBestSeller', 'updatedAt'
+                ]) &&
+                incoming().soldCount >= existing().soldCount &&
+                getAfter(/databases/$(database)/documents/best_selling_products/$(productId)).data.soldCount == incoming().soldCount
+              ) ||
+              // Action 3: Toggle Best Seller flag
+              incoming().diff(existing()).affectedKeys().hasOnly(['isBestSeller', 'updatedAt'])
+            )
+          )
+        );
+      allow delete: if isValidId(productId) && isVerifiedUser() && (
+        existing().sellerUid == request.auth.uid || isAdmin()
+      );
+    }
+
+    // 9. Best-Selling Products Leaderboard Collection (Atomically linked to seller_products)
+    match /best_selling_products/{bestSellerId} {
+      allow get: if isValidId(bestSellerId) && (
+        existing().isPublic == true ||
+        (isSignedIn() && existing().sellerUid == request.auth.uid) ||
+        isAdmin()
+      );
+      allow list: if resource.data.isPublic == true ||
+        (isSignedIn() && resource.data.sellerUid == request.auth.uid) ||
+        isAdminEmail();
+      allow create: if isValidId(bestSellerId)
+        && isVerifiedUser()
+        && isValidBestSellingProduct(incoming(), bestSellerId)
+        && incoming().sellerUid == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
+        && getAfter(/databases/$(database)/documents/seller_products/$(incoming().productId)).data.sellerUid == request.auth.uid;
+      allow update: if isValidId(bestSellerId)
+        && isVerifiedUser()
+        && isValidBestSellingProduct(incoming(), bestSellerId)
+        && incoming().id == existing().id
+        && incoming().productId == existing().productId
+        && incoming().sellerUid == existing().sellerUid
+        && incoming().storeId == existing().storeId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          isAdmin() ||
+          (
+            existing().sellerUid == request.auth.uid &&
+            getAfter(/databases/$(database)/documents/seller_products/$(existing().productId)).data.sellerUid == request.auth.uid &&
+            incoming().diff(existing()).affectedKeys().hasOnly([
+              'storeName', 'productName', 'productSlug', 'brand', 'categoryName',
+              'imageKey', 'imageUrl', 'price', 'soldCount', 'revenueTotal',
+              'stockQuantity', 'isPublic', 'updatedAt'
+            ])
+          )
+        );
+      allow delete: if isValidId(bestSellerId) && isVerifiedUser() && (
+        existing().sellerUid == request.auth.uid || isAdmin()
+      );
+    }
+  }
+}

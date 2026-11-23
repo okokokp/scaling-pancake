@@ -1,0 +1,366 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: 'Outfit', system-ui, -apple-system, sans-serif;
+}
+
+@layer base {
+  :root {
+    --mk-canvas: #FFFFFF;
+    --mk-surface: #FFFFFF;
+    --mk-well: #FBEFFB;
+    --mk-tint-soft: #F9F5FD;
+    --mk-royal: #4A3894;
+    --mk-royal-hover: #3A2B78;
+    --mk-wisteria: #9678CE;
+    --mk-silk: #E794C9;
+    --mk-ink: #1D1538;
+    --mk-muted: #60567E;
+    --mk-border: #E5DDF5;
+  }
+
+  .dark {
+    --mk-canvas: #050507;
+    --mk-surface: #0E0E13;
+    --mk-well: #15151C;
+    --mk-tint-soft: #121218;
+    --mk-royal: #9678CE;
+    --mk-royal-hover: #AD94DF;
+    --mk-wisteria: #C49BF5;
+    --mk-silk: #E794C9;
+    --mk-ink: #F5F2FC;
+    --mk-muted: #A6A2B8;
+    --mk-border: #22222C;
+  }
+
+  html,
+  body {
+    font-family: 'Outfit', system-ui, -apple-system, sans-serif;
+    background-color: var(--mk-canvas);
+    color: var(--mk-ink);
+    -webkit-font-smoothing: antialiased;
+    scroll-behavior: smooth;
+  }
+
+  html[lang="ar"],
+  html[lang="ar"] body,
+  [dir="rtl"] {
+    font-family: 'Readex Pro', system-ui, -apple-system, sans-serif;
+  }
+
+  html[lang="en"],
+  html[lang="en"] body,
+  [dir="ltr"] {
+    font-family: 'Outfit', system-ui, -apple-system, sans-serif;
+  }
+
+  body {
+    margin: 0;
+  }
+
+  *:focus-visible {
+    outline: 2px solid #9678CE;
+    outline-offset: 2px;
+  }
+}
+
+.font-display {
+  font-family: inherit;
+  letter-spacing: -0.02em;
+}
+
+html[lang="ar"] .font-display,
+[dir="rtl"] .font-display {
+  letter-spacing: 0;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Light-first ambient radial wash */
+.marketly-ambient-bg {
+  background-color: var(--mk-canvas);
+  background-image:
+    radial-gradient(ellipse 68% 45% at 15% -5%, rgba(251, 239, 251, 0.9), transparent 65%),
+    radial-gradient(ellipse 55% 40% at 88% 0%, rgba(231, 148, 201, 0.14), transparent 62%);
+}
+
+.dark .marketly-ambient-bg {
+  background-color: var(--mk-canvas);
+  background-image:
+    radial-gradient(ellipse 65% 40% at 15% -5%, rgba(74, 56, 148, 0.12), transparent 65%),
+    radial-gradient(ellipse 55% 40% at 88% 0%, rgba(150, 120, 206, 0.08), transparent 62%);
+}
+
+/* Frosted liquid glass surface for popovers, floating chat, and sticky header */
+.liquid-glass {
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid rgba(150, 120, 206, 0.28);
+  box-shadow: 0 20px 50px -16px rgba(74, 56, 148, 0.28);
+}
+
+.dark .liquid-glass {
+  background: rgba(14, 14, 19, 0.96);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid rgba(196, 155, 245, 0.2);
+  box-shadow: 0 20px 50px -16px rgba(0, 0, 0, 0.8);
+}
+
+/* Marketly signature storefront awning motif in Wisteria Purple */
+.marketly-awning,
+.shopfront-awning {
+  height: 10px;
+  background-image: repeating-linear-gradient(
+    90deg,
+    #4A3894 0px,
+    #4A3894 22px,
+    #FBEFFB 22px,
+    #FBEFFB 44px
+  );
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+
+.dark .marketly-awning,
+.dark .shopfront-awning {
+  background-image: repeating-linear-gradient(
+    90deg,
+    #9678CE 0px,
+    #9678CE 22px,
+    #15151C 22px,
+    #15151C 44px
+  );
+}
+
+/* Subtle Marketly animations (respecting reduced-motion) */
+@keyframes marketlyFadeSlide {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes marketlyDropdownReveal {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes marketlyModalPop {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes marketlyShimmerLtr {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes marketlyShimmerRtl {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.marketly-page-enter {
+  animation: marketlyFadeSlide 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.marketly-dropdown-enter {
+  animation: marketlyDropdownReveal 170ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.marketly-modal-enter {
+  animation: marketlyModalPop 210ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.marketly-shimmer {
+  background: linear-gradient(90deg, #F5EFFB 25%, #FBEFFB 50%, #F5EFFB 75%);
+  background-size: 200% 100%;
+  animation: marketlyShimmerLtr 1.4s ease-in-out infinite;
+}
+
+[dir="rtl"] .marketly-shimmer {
+  animation-name: marketlyShimmerRtl;
+}
+
+.dark .marketly-shimmer {
+  background: linear-gradient(90deg, #1E1730 25%, #2B2145 50%, #1E1730 75%);
+  background-size: 200% 100%;
+}
+
+/* Slim tinted scrollbar */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(150, 120, 206, 0.38);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(74, 56, 148, 0.55);
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Official Sign in with Google button styles */
+.gsi-material-button {
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  background-color: #ffffff;
+  background-image: none;
+  border: 1px solid #d5cbe8;
+  border-radius: 20px;
+  box-sizing: border-box;
+  color: #1D1538;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  height: 40px;
+  letter-spacing: 0.1px;
+  outline: none;
+  overflow: hidden;
+  padding: 0 14px;
+  position: relative;
+  text-align: center;
+  transition: background-color 0.2s, border-color 0.2s, box-shadow 0.2s;
+  vertical-align: middle;
+  white-space: nowrap;
+  width: auto;
+  max-width: 400px;
+  min-width: min-content;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gsi-material-button .gsi-material-button-icon {
+  height: 18px;
+  margin-inline-end: 10px;
+  min-width: 18px;
+  width: 18px;
+}
+
+.gsi-material-button .gsi-material-button-content-wrapper {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  height: 100%;
+  justify-content: center;
+  position: relative;
+  width: 100%;
+}
+
+.gsi-material-button .gsi-material-button-contents {
+  flex-grow: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: top;
+}
+
+.gsi-material-button .gsi-material-button-state {
+  transition: opacity 0.2s;
+  bottom: 0;
+  left: 0;
+  opacity: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+
+.gsi-material-button:disabled {
+  cursor: default;
+  background-color: #ffffff61;
+  border-color: #1f1f1f1f;
+}
+
+.gsi-material-button:not(:disabled):hover {
+  box-shadow: 0 2px 6px rgba(74, 56, 148, 0.16);
+}
+
+.gsi-material-button:not(:disabled):hover .gsi-material-button-state {
+  background-color: #4A3894;
+  opacity: 0.05;
+}
+
+@media print {
+  @page {
+    size: auto;
+    margin: 12mm;
+  }
+
+  body.printing-qr-sheet * {
+    visibility: hidden !important;
+  }
+
+  body.printing-qr-sheet #seller-qr-print-sheet,
+  body.printing-qr-sheet #seller-qr-print-sheet * {
+    visibility: visible !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body.printing-qr-sheet #seller-qr-print-sheet {
+    position: fixed !important;
+    inset: 0 !important;
+    margin: auto !important;
+    width: 100% !important;
+    max-width: 460px !important;
+    height: fit-content !important;
+    box-shadow: none !important;
+  }
+}

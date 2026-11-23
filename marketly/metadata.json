@@ -1,0 +1,10 @@
+{
+  "name": "Remix Remix Remix Remix Shopfront — Local Multi-Vendor Marketplace",
+  "description": "Discover nearby physical shops in El Oued, compare prices in real time, check availability, and order for local pickup or driver delivery.",
+  "requestFramePermissions": [
+    "geolocation"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

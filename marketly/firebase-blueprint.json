@@ -1,0 +1,520 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Public-safe user role and display profile without PII.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Firebase Auth UID matching document ID."
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "description": "Public seller or customer display name."
+        },
+        "role": {
+          "type": "string",
+          "enum": ["customer", "merchant", "driver"],
+          "description": "Self-selected application role."
+        },
+        "sellerType": {
+          "type": "string",
+          "enum": ["physical_store", "online_page"],
+          "description": "Whether merchant operates a physical store or an online-only social page."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when user profile was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when user profile was last updated."
+        }
+      },
+      "required": ["uid", "displayName", "role", "createdAt", "updatedAt"]
+    },
+    "UserPrivateInfo": {
+      "title": "UserPrivateInfo",
+      "description": "Isolated PII document for user email and phone number.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Owner Firebase Auth UID."
+        },
+        "email": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 120,
+          "description": "Verified account email address."
+        },
+        "phone": {
+          "type": "string",
+          "maxLength": 24,
+          "description": "Optional contact phone number."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of creation."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of update."
+        }
+      },
+      "required": ["uid", "email", "createdAt", "updatedAt"]
+    },
+    "AdminRecord": {
+      "title": "AdminRecord",
+      "description": "Server-provisioned administrator marker document.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "email": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "email", "createdAt"]
+    },
+    "Store": {
+      "title": "Store",
+      "description": "Physical shop storefront in El Oued managed by a seller.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Unique store identifier."
+        },
+        "ownerUid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Firebase Auth UID of the store owner."
+        },
+        "storeType": {
+          "type": "string",
+          "enum": ["physical_store", "online_page"],
+          "description": "Whether the storefront is a physical brick-and-mortar shop or an online-only IG/FB page."
+        },
+        "name": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 80,
+          "description": "Store display name."
+        },
+        "slug": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 100,
+          "pattern": "^[a-z0-9\\-]+$",
+          "description": "URL-safe store slug."
+        },
+        "description": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 400,
+          "description": "Short storefront description."
+        },
+        "area": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 60,
+          "description": "Neighborhood in El Oued."
+        },
+        "city": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 60,
+          "description": "City name."
+        },
+        "openingHours": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 60,
+          "description": "Store operating hours."
+        },
+        "isOpen": {
+          "type": "boolean",
+          "description": "Whether the shop is currently open."
+        },
+        "isApproved": {
+          "type": "boolean",
+          "description": "Whether the shop is visible in the public catalog."
+        },
+        "rating": {
+          "type": "number",
+          "description": "Average store rating from 0 to 5."
+        },
+        "reviewCount": {
+          "type": "integer",
+          "description": "Number of store reviews."
+        },
+        "deliveryFee": {
+          "type": "integer",
+          "description": "Local delivery fee in DZD."
+        },
+        "deliveryRadiusKm": {
+          "type": "number",
+          "description": "Delivery coverage radius in km."
+        },
+        "logoUrl": {
+          "type": "string",
+          "maxLength": 500,
+          "description": "Shop profile picture / logo URL."
+        },
+        "whatsapp": {
+          "type": "string",
+          "maxLength": 32,
+          "description": "WhatsApp contact number."
+        },
+        "facebookUrl": {
+          "type": "string",
+          "maxLength": 300,
+          "description": "Facebook page URL."
+        },
+        "instagramUrl": {
+          "type": "string",
+          "maxLength": 300,
+          "description": "Instagram profile URL."
+        },
+        "googleMapsUrl": {
+          "type": "string",
+          "maxLength": 500,
+          "description": "Google Maps location URL."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "ownerUid",
+        "name",
+        "slug",
+        "description",
+        "area",
+        "city",
+        "openingHours",
+        "isOpen",
+        "isApproved",
+        "rating",
+        "reviewCount",
+        "deliveryFee",
+        "deliveryRadiusKm",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "SellerProduct": {
+      "title": "SellerProduct",
+      "description": "Product saved by a seller with live pricing, stock, and sales count.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "sellerUid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "sellerName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "storeId": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "storeName": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 80
+        },
+        "name": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 100
+        },
+        "slug": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 120,
+          "pattern": "^[a-z0-9\\-]+$"
+        },
+        "brand": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "description": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 400
+        },
+        "categoryId": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 40,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "categoryName": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 60
+        },
+        "imageKey": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "imageUrl": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "price": {
+          "type": "integer",
+          "description": "Unit price in DZD."
+        },
+        "currency": {
+          "type": "string",
+          "enum": ["DZD"]
+        },
+        "stockQuantity": {
+          "type": "integer",
+          "description": "Current stock count."
+        },
+        "availabilityStatus": {
+          "type": "string",
+          "enum": ["in_stock", "out_of_stock", "unconfirmed"]
+        },
+        "soldCount": {
+          "type": "integer",
+          "description": "Total units sold for this product."
+        },
+        "revenueTotal": {
+          "type": "number",
+          "description": "Cumulative revenue in DZD."
+        },
+        "isActive": {
+          "type": "boolean"
+        },
+        "isBestSeller": {
+          "type": "boolean"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "sellerUid",
+        "sellerName",
+        "storeId",
+        "storeName",
+        "name",
+        "slug",
+        "brand",
+        "description",
+        "categoryId",
+        "categoryName",
+        "imageKey",
+        "imageUrl",
+        "price",
+        "currency",
+        "stockQuantity",
+        "availabilityStatus",
+        "soldCount",
+        "revenueTotal",
+        "isActive",
+        "isBestSeller",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "BestSellingProduct": {
+      "title": "BestSellingProduct",
+      "description": "Aggregated best-selling product ranking entry synchronized atomically with seller_products.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "productId": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "sellerUid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "storeId": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "storeName": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 80
+        },
+        "productName": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 100
+        },
+        "productSlug": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 120,
+          "pattern": "^[a-z0-9\\-]+$"
+        },
+        "brand": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "categoryName": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 60
+        },
+        "imageKey": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "imageUrl": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "price": {
+          "type": "integer"
+        },
+        "currency": {
+          "type": "string",
+          "enum": ["DZD"]
+        },
+        "soldCount": {
+          "type": "integer"
+        },
+        "revenueTotal": {
+          "type": "number"
+        },
+        "stockQuantity": {
+          "type": "integer"
+        },
+        "isPublic": {
+          "type": "boolean"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "productId",
+        "sellerUid",
+        "storeId",
+        "storeName",
+        "productName",
+        "productSlug",
+        "brand",
+        "categoryName",
+        "imageKey",
+        "imageUrl",
+        "price",
+        "currency",
+        "soldCount",
+        "revenueTotal",
+        "stockQuantity",
+        "isPublic",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "User profile document keyed by Firebase Auth UID."
+    },
+    "/users/{userId}/private/{docId}": {
+      "schema": { "$ref": "#/entities/UserPrivateInfo" },
+      "description": "Private PII subcollection restricted strictly to owner and admin."
+    },
+    "/admins/{userId}": {
+      "schema": { "$ref": "#/entities/AdminRecord" },
+      "description": "Trusted admin role documents."
+    },
+    "/stores/{storeId}": {
+      "schema": { "$ref": "#/entities/Store" },
+      "description": "Seller physical storefronts in El Oued."
+    },
+    "/seller_products/{productId}": {
+      "schema": { "$ref": "#/entities/SellerProduct" },
+      "description": "Seller product catalog documents persisted in Firestore."
+    },
+    "/best_selling_products/{bestSellerId}": {
+      "schema": { "$ref": "#/entities/BestSellingProduct" },
+      "description": "Best-selling product leaderboard records synchronized atomically with seller_products."
+    }
+  }
+}
